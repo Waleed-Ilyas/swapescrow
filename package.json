@@ -1,0 +1,29 @@
+{
+  "name": "swapescrow",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@12.8.1",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "next": "15.5.26",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.26",
+    "typescript": "^5",
+    "vitest": "^5.0.2"
+  }
+}
