@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { offers, summarizeOffer } from '@/lib/escrow';
+import { offers as initialOffers, summarizeOffer } from '@/lib/escrow';
 
 const statusFilters = ['All', 'Open', 'Locked', 'Settled', 'Cancelled'] as const;
 
@@ -16,7 +16,9 @@ const stats = [
 
 export default function Page() {
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('All');
+  const [offers, setOffers] = useState(initialOffers);
   const [selectedId, setSelectedId] = useState(offers[0]?.id ?? '');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const visibleOffers =
     selectedStatus === 'All' ? offers : offers.filter((offer) => offer.status === selectedStatus);
@@ -30,7 +32,20 @@ export default function Page() {
     const counts = { Low: 0, Medium: 0, High: 0 };
     for (const offer of offers) counts[offer.risk] += 1;
     return counts;
-  }, []);
+  }, [offers]);
+
+  const handleAction = async (action: 'Cancel' | 'Settle') => {
+    setIsProcessing(true);
+    // Simulate smart contract interaction delay
+    await new Promise(r => setTimeout(r, 1500));
+    setOffers(offers.map(o => {
+      if (o.id === selectedId) {
+        return { ...o, status: action === 'Cancel' ? 'Cancelled' : 'Settled' };
+      }
+      return o;
+    }));
+    setIsProcessing(false);
+  };
 
   return (
     <div className="shell">
@@ -59,7 +74,7 @@ export default function Page() {
           <button
             key={status}
             type="button"
-            className={`filter-pill ${selectedStatus === status ? 'active' : ''}`}
+            className={'filter-pill ' + (selectedStatus === status ? 'active' : '')}
             onClick={() => setSelectedStatus(status)}
           >
             {status}
@@ -93,14 +108,14 @@ export default function Page() {
                   >
                     <td>
                       <div>{offer.id}</div>
-                      <div className="meta">{offer.maker} → {offer.taker}</div>
+                      <div className="meta">{offer.maker} -> {offer.taker}</div>
                     </td>
                     <td>
                       <div>{offer.amountA} {offer.tokenA}</div>
                       <div className="meta">for {offer.amountB} {offer.tokenB}</div>
                     </td>
                     <td>{summary.coverage}</td>
-                    <td><span className={`badge ${summary.statusTone}`}>{offer.status}</span></td>
+                    <td><span className={'badge ' + summary.statusTone}>{offer.status}</span></td>
                   </tr>
                 );
               })}
@@ -109,54 +124,50 @@ export default function Page() {
         </section>
 
         <aside className="panel-stack">
-          <div className="card">
-            <h3 style={{ marginTop: 0 }}>Settlement guardrails</h3>
-            <div className="warning">
-              Escrow locks funds in a vault-style PDA before settlement. The maker can cancel before completion; the taker can finalize only after both asset conditions are met.
-            </div>
-          </div>
-
           {selectedOffer && selectedSummary ? (
             <div className="card">
               <h3 style={{ marginTop: 0 }}>{selectedOffer.id}</h3>
               <div className="mini">
                 <strong>{selectedOffer.tokenA} / {selectedOffer.tokenB}</strong>
-                <div className="meta">{selectedOffer.amountA} {selectedOffer.tokenA} → {selectedOffer.amountB} {selectedOffer.tokenB}</div>
-                <div className="meta">Ratio {selectedSummary.ratio.toFixed(4)} • {selectedOffer.risk} risk</div>
+                <div className="meta">{selectedOffer.amountA} {selectedOffer.tokenA} -> {selectedOffer.amountB} {selectedOffer.tokenB}</div>
+                <div className="meta">Ratio {selectedSummary.ratio.toFixed(4)} - {selectedOffer.risk} risk</div>
               </div>
               <div className="detail-block">
                 <div><strong>Maker</strong><div className="meta">{selectedOffer.maker}</div></div>
                 <div><strong>Taker</strong><div className="meta">{selectedOffer.taker}</div></div>
                 <div><strong>Status</strong><div className="meta">{selectedOffer.status}</div></div>
               </div>
+              {selectedOffer.status === 'Open' || selectedOffer.status === 'Locked' ? (
+                <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+                  <button className="primary" style={{ flex: 1, padding: 8 }} disabled={isProcessing} onClick={() => handleAction('Settle')}>
+                    {isProcessing ? 'Processing...' : 'Settle Swap'}
+                  </button>
+                  <button className="pill" style={{ flex: 1, padding: 8 }} disabled={isProcessing} onClick={() => handleAction('Cancel')}>
+                     Cancel
+                  </button>
+                </div>
+              ) : (
+                <div style={{ marginTop: 16, fontSize: 12, color: '#9ca3af', padding: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, textAlign: 'center' }}>
+                  This offer is {selectedOffer.status.toLowerCase()}
+                </div>
+              )}
             </div>
           ) : null}
 
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Execution notes</h3>
-            <div className="panel-stack">
-              {offers.slice(0, 3).map((offer) => {
-                const summary = summarizeOffer(offer);
-                return (
-                  <div key={offer.id} className="mini">
-                    <strong>{offer.id}</strong>
-                    <div className="meta">ratio {summary.ratio.toFixed(4)} • {offer.risk} risk</div>
-                  </div>
-                );
-              })}
+            <h3 style={{ marginTop: 0 }}>Settlement guardrails</h3>
+            <div className="warning">
+              Escrow locks funds in a vault-style PDA before settlement. The maker can cancel before completion; the taker can finalize only after both asset conditions are met.
             </div>
           </div>
-
+          
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Risk profile</h3>
-            <div className="panel-stack">
-              {Object.entries(riskSummary).map(([risk, count]) => (
-                <div key={risk} className="mini">
-                  <strong>{risk}</strong>
-                  <div className="meta">{count} offers</div>
-                </div>
-              ))}
-            </div>
+             <h3 style={{ margin: '0 0 12px 0', fontSize: 16 }}>About this project</h3>
+             <p className="note" style={{ color: '#9db7c8', lineHeight: 1.5 }}>SwapEscrow is a Devnet-only Solana Anchor smart contract interface. It simulates atomic token swaps, PDA vault lockups, and maker/taker settlement flows in a risk-aware environment. Built for educational and portfolio purposes.</p>
+             <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
+                <a href="https://github.com/Waleed-Ilyas/swapescrow" target="_blank" rel="noreferrer" style={{ color: '#38bdf8', fontSize: 13, textDecoration: 'none' }}>View on GitHub</a>
+                <a href="/work/swapescrow" target="_blank" rel="noreferrer" style={{ color: '#38bdf8', fontSize: 13, textDecoration: 'none' }}>Read Case Study</a>
+             </div>
           </div>
         </aside>
       </div>
