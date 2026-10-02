@@ -108,7 +108,7 @@ export default function Page() {
                   >
                     <td>
                       <div>{offer.id}</div>
-                      <div className="meta">{offer.maker} -> {offer.taker}</div>
+                      <div className="meta">{offer.maker} -&gt; {offer.taker}</div>
                     </td>
                     <td>
                       <div>{offer.amountA} {offer.tokenA}</div>
@@ -129,7 +129,7 @@ export default function Page() {
               <h3 style={{ marginTop: 0 }}>{selectedOffer.id}</h3>
               <div className="mini">
                 <strong>{selectedOffer.tokenA} / {selectedOffer.tokenB}</strong>
-                <div className="meta">{selectedOffer.amountA} {selectedOffer.tokenA} -> {selectedOffer.amountB} {selectedOffer.tokenB}</div>
+                <div className="meta">{selectedOffer.amountA} {selectedOffer.tokenA} -&gt; {selectedOffer.amountB} {selectedOffer.tokenB}</div>
                 <div className="meta">Ratio {selectedSummary.ratio.toFixed(4)} - {selectedOffer.risk} risk</div>
               </div>
               <div className="detail-block">
