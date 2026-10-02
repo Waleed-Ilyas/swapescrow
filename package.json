@@ -2,7 +2,6 @@
   "name": "swapescrow",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@12.8.1",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -25,5 +24,15 @@
     "eslint-config-next": "15.5.26",
     "typescript": "^5",
     "vitest": "^5.0.2"
-  }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "unrs-resolver",
+      "esbuild",
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma"
+    ]
+  },
+  "packageManager": "pnpm@12.8.1"
 }
